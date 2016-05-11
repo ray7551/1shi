@@ -1,0 +1,26 @@
+{
+  "name": "doNotDie",
+  "homepage": "https://github.com/ray7551/amazing101",
+  "authors": [
+    "'ray7551' <ray7551@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "moduleType": [
+    "amd"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "src"
+  ],
+  "dependencies": {
+    "pixi.js": "pixi#^3.0.11",
+    "jquery": "^2.2.3"
+  }
+}
