@@ -15,12 +15,12 @@ var runSequence = require('run-sequence');
 var glob = {
   js: 'app/js/**/*.js',
   html: 'app/*.html',
-  img: 'app/img/**/*'
+  res: 'app/res/**/*'
 };
 var dist = {
   js: 'dist/js',
   html: 'dist/*.html',
-  img: 'dist/img'
+  res: 'dist/res'
 };
 
 var sendNotice = function (msg) {
@@ -48,19 +48,20 @@ gulp.task('clean-js', function () {
 });
 gulp.task('js', function () {
   gulp.src('app/index.html')
-    .pipe(newer({
-      dest: dist.js,
-      ext: 'js'
-    }))
     .pipe(useref())
     .pipe(ignore.include('*.js'))
+    // don't work
+    // .pipe(newer({
+    //   dest: dist.js,
+    //   ext: 'js'
+    // }))
     .pipe(gulp.dest('dist'));
 });
 // create a task that ensures the `js` task is complete before
 // reloading browsers
 gulp.task('js-watch', ['js'], function() {
-    browserSync.reload();
     sendNotice('js done');
+    browserSync.reload();
 });
 
 
@@ -79,15 +80,20 @@ gulp.task('html', function () {
     .pipe(gulp.dest('dist'));
 });
 gulp.task('html-watch', ['html'], function() {
-    browserSync.reload();
     sendNotice('html done');
+    browserSync.reload();
 });
 
 gulp.task('default', ['clean'], function(cb) {
   runSequence(
-    ['js', 'html'],
+    ['js', 'html', 'resource'],
     cb
   );
+});
+
+gulp.task('resource', function () {
+  gulp.src(glob.res)
+    .pipe(gulp.dest(dist.res));
 });
 
 // use default task to launch Browsersync and watch JS files
@@ -108,8 +114,12 @@ gulp.task('serve', ['default'], function () {
 });
 
 
-gulp.task('dbuild', ['html', 'js'], function () {
+gulp.task('dbuild', ['html', 'js', 'resource'], function () {
   console.log('build-dev completed');
   notify('[task] build-dev completed');
 });
 
+gulp.task('release', [''], function () {
+  console.log('release completed');
+  notify('[task] release completed');
+});

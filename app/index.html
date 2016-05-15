@@ -3,24 +3,58 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no,width=device-width">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1, user-scalable=no, minimal-ui">
+
+  <link rel="manifest" href="/res/manifest.webapp">
+  <meta name="apple-mobile-web-app-title" content="Triangle">
+  <meta name="application-name" content="Triangle">
+
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="format-detection" content="telephone=no">
-  <meta name="viewport" content="minimal-ui">
-  <!-- <link rel="apple-touch-icon" sizes="144x144" href="mobileapp/images/icon.png">
+
+  <link rel="shortcut icon" href="/res/icon/favicon.ico">
+
+  <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/res/icon/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/res/icon/apple-touch-icon-60x60.png">
+  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/res/icon/apple-touch-icon-72x72.png">
+  <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/res/icon/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/res/icon/apple-touch-icon-114x114.png">
+  <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/res/icon/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/res/icon/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/res/icon/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon-precomposed" sizes="180x180" href="/res/icon/apple-touch-icon-180x180.png">
+
+  <link rel="icon" type="image/png" href="/res/icon/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="/res/icon/android-chrome-192x192.png" sizes="192x192">
+  <link rel="icon" type="image/png" href="/res/icon/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/png" href="/res/icon/favicon-16x16.png" sizes="16x16">
+
+  <link rel="mask-icon" href="/res/icon/safari-pinned-tab.svg" color="#ffffff">
+  <meta name="msapplication-TileColor" content="#ffffff">
+  <meta name="msapplication-TileImage" content="/res/icon/mstile-144x144.png">
+  <meta name="msapplication-config" content="/res/icon/browserconfig.xml">
+  <meta name="theme-color" content="#ffffff">
+
+  <!-- 
   <link rel="apple-touch-startup-image" href="mobileapp/images/splashscreen-iphone.png" media="(device-width: 320px) and (device-height: 480px)"> -->
+  <meta name="format-detection" content="telephone=no">
+  <!-- 
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="-1">
+  -->
   <title>Do Not Die</title>
   <!-- <link rel="stylesheet" href="css/index.css"> -->
-  <!-- <link rel="icon" href="/favicon.ico" /> -->
   <style type="text/css">
   body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, code, form, fieldset, legend, input, textarea, p, blockquote, th, td, hr, button, article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
     margin: 0;
     padding: 0;
   }
-  body {
+  html, body {
+    width: 100%; 
+    height: 100%; 
     overflow: hidden;
   }
+
   #main.center {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -28,6 +62,7 @@
   }
   </style>
 </head>
+
 <body>
 
 <canvas id="main"></canvas>
@@ -35,11 +70,97 @@
 
 <!-- build:js js/libs.js -->
 <script type="text/javascript" src="../vendor/jquery/dist/jquery.min.js"></script>
-<script type="text/javascript" src="../vendor/pixi.js/bin/pixi.min.js"></script>
+<script type="text/javascript" src="../vendor/pixi.js/bin/pixi.js"></script>
 <!-- endbuild -->
+<script type="text/javascript">
+  var l = console.log.bind(console);
+  function extend(Child, Parent) {
+    var F = function(){};
+    F.prototype = Parent.prototype;
+    Child.prototype = new F();
+    Child.prototype.constructor = Child;
+    Child.uber = Parent.prototype;
+  }
+  var DIRECTION = {
+    CW: 'clockwise',
+    CCW: 'counter-clockwise',
+    // PAUSE: 'pause'
+  };
 
+  Function.prototype.bind || (Function.prototype.bind = function(oThis) {
+    if (typeof this !== 'function') {
+      // closest thing possible to the ECMAScript 5
+      // internal IsCallable function
+      throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
+    }
+
+    var aArgs   = Array.prototype.slice.call(arguments, 1),
+        fToBind = this,
+        fNOP    = function() {},
+        fBound  = function() {
+          return fToBind.apply(this instanceof fNOP
+                 ? this
+                 : oThis,
+                 aArgs.concat(Array.prototype.slice.call(arguments)));
+        };
+
+    if (this.prototype) {
+      // Function.prototype doesn't have a prototype property
+      fNOP.prototype = this.prototype; 
+    }
+    fBound.prototype = new fNOP();
+
+    return fBound;
+  });
+
+  Array.isArray || (Array.isArray = function(val) {
+    return 
+      // is not the string '[object Array]' and
+      '' + a !== a &&
+      // test with Object.prototype.toString
+      {}.toString.call(val) === '[object Array]'
+  });
+
+  Array.prototype.forEach || (Array.prototype.forEach = function(callback, thisArg) {
+    var T, k;
+
+    if (this == null) {
+      throw new TypeError(' this is null or not defined');
+    }
+
+    var O = Object(this);
+
+    var len = O.length >>> 0;
+
+    if (typeof callback !== "function") {
+      throw new TypeError(callback + ' is not a function');
+    }
+
+    if (arguments.length > 1) {
+      T = thisArg;
+    }
+
+    k = 0;
+
+    while (k < len) {
+
+      var kValue;
+
+      if (k in O) {
+        kValue = O[k];
+        callback.call(T, kValue, k, O);
+      }
+      k++;
+    }
+  });
+
+
+</script>
 <!-- build:js js/app.js -->
 <script type="text/javascript" src="js/world.js"></script>
+<script type="text/javascript" src="js/role.js"></script>
+<script type="text/javascript" src="js/boss.js"></script>
+<script type="text/javascript" src="js/worrior.js"></script>
 <script type="text/javascript" src="js/app.js"></script>
 <!-- endbuild -->
 </body>

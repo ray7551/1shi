@@ -1,39 +1,30 @@
-$(function () {
-  'use strict';
+// $(function () {
+//   'use strict';
 
+  //var world = new World('main', 0x8232CD, 500, 900);
+  // gold FFD700
+  // goldenrod DAA520
+  // orangered FF4500
+  // orange FFA500
+  // lightblue ADD8E6
+  var world = new World('main', 0xFFA500);
+  world.loadAssets([
+    'res/img/boss.png',
+    'res/img/worrior.png'
+  ], main);
 
-  var world = new World('main');
+  function main() {
+    // △
+    var boss = new Boss(['res/img/boss.png'], world);
+    var worrior = new Worrior(['res/img/worrior.png'], world);
 
-  // △
-  var bossSize = world.width * 0.06;
-  var boss = new PIXI.Text('▲', {
-    font : bossSize + 'px Arial',
-    align : 'center'
-  });
-  boss.alpha = .8;
-  boss.rotation = 0;
-  boss.rotateSpeed = 0.004;
-  
+    world.addDisplayObject(boss);
+    world.addDisplayObject(worrior);
 
-  world.stage.addChild(boss);
+    boss.aim(worrior);
 
-  
-  requestAnimationFrame(animate);
-
-  var lastTime;
-  function animate(timestamp) {
-    var dt = timestamp - (lastTime || timestamp);
-    lastTime = timestamp;
-
-    boss.x = world.width / 2;
-    boss.y = world.height / 2;
-    boss.pivot.x = boss.width * .5;
-    boss.pivot.y = boss.height * .5;
-    boss.rotation += boss.rotateSpeed * dt;
-    world.render();
-
-    requestAnimationFrame(animate);
+    world.tick();
   }
 
 
-});
+// });
