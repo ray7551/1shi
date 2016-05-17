@@ -39,6 +39,13 @@
     });
   }
 
+  Role.legalizeRadian = function(radian) {
+    radian = radian % (2 * Math.PI);
+    return radian < 0
+      ? 2 * Math.PI + radian
+      : radian;
+  };
+
 
   Role.prototype = {
     init: function () {

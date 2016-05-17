@@ -4,20 +4,23 @@
   // Boss extends Role
   var _super = Role;
   var visionPurview = Math.PI / 8;
+  var baseSpeedMultiple = 1.5;
   var baseSpeed;
+  var edgePurviewMultiple = 0.05; // multiple for calc attack purview edge wide
 
   function Boss(assets, world) {
     _super.call(this, assets, world);
-    this.size = 40;
+    this.size = 60;
     this.rotateSpeed = 0; // rad/ms
     this.rotateDirection = DIRECTION.CW;
+    this.rotateInit = 0;
     Object.defineProperties(this, {
       // attack range
       'attackPurview': {
         get: function () {
           // it should mainly determined by boss.rotateSpeed, worrior.revolutionSpeed and bulet speed
           // now temporarily use Math.PI / 8 as attackPurview 
-          return Math.PI / 8;
+          return Math.PI / 4;
         }
       }
     });
@@ -46,20 +49,22 @@
   };
 
   Boss.prototype.update = function (dt, t) {
-    this.sprite.rotation = this.sprite.rotation % (2 * Math.PI);
+    this.sprite.rotation = Role.legalizeRadian(this.sprite.rotation);
 
     // Aim at the worrior
     this.aim(t);
     //this.audit();
 
-    this.sprite.rotation = this.rotateDirection === DIRECTION.CW ? this.sprite.rotation + this.rotateSpeed * dt : this.sprite.rotation - this.rotateSpeed * dt;
+    this.sprite.rotation = this.rotateDirection === DIRECTION.CW 
+      ? this.sprite.rotation + this.rotateSpeed * dt 
+      : this.sprite.rotation - this.rotateSpeed * dt;
     // l(this.rotateDirection);
   };
 
   Boss.prototype.addEnemy = function (worrior) {
     this.worrior = worrior;
     //this.sprite.rotation = this.worrior.revolution + Math.PI;
-    baseSpeed = 1.5 * this.worrior.revolutionSpeed;
+    baseSpeed = baseSpeedMultiple * this.worrior.revolutionSpeed;
     this.rotateSpeed = baseSpeed;
   };
 
@@ -68,105 +73,150 @@
    * determine if it is time to change rotate direction and shoot
    */
   Boss.prototype.aim = function (t) {
-    var worriorRev = this.worrior.revolution;
+    var worriorRev = Role.legalizeRadian(this.worrior.revolution);
     var diff = worriorRev - this.sprite.rotation;
     var diffAbs = Math.abs(diff) < Math.PI ? Math.abs(diff) : 2 * Math.PI - Math.abs(diff);
 
+    // if w at edge part of attack purvieiw
+    var inEdge = this.attackPurview - diffAbs > this.attackPurview * edgePurviewMultiple;
+    var inLeftEdge = inEdge && diff < 0;
+    var inRightEdge = inEdge && diff > 0;
+    // if b and w run in opposite direciton
     var isOpposite = this.worrior.revolutionDirection !== this.rotateDirection;
+
+    // @TODO consider the circumstance of boss is slower
+    // now it certain that this.rotateSpeed > this.worrior.revolutionSpeed
     // var isFaster = this.rotateSpeed > this.worrior.revolutionSpeed;
-    var lockDirection;
 
-    if (lockingDirection) {
-      return;
+    var newDirection;
+
+    // if (lockingDirection) {
+    //   return;
+    // }
+
+    if(diffAbs < 0) {
+      debugger;
     }
 
-    if (isOpposite) {
-      if (diffAbs <= this.attackPurview) {
-        l('INo');
+    if (diffAbs <= this.attackPurview) {
+
+      this.rotateSpeed = baseSpeed;
+      if (isOpposite) {
+        if (inLeftEdge && this.worrior.revolutionDirection === DIRECTION.CCW) {
+          this.setDirection(DIRECTION.CW, this.calcEdgeLockTime(), true);
+          return;
+        }
+
+        if (inRightEdge && this.worrior.revolutionDirection === DIRECTION.CW) {
+          this.setDirection(DIRECTION.CCW, this.calcEdgeLockTime(), true);
+          return;
+        }
         this.rotateSpeed = baseSpeed;
-        lockDirection = diff >= 0 ? DIRECTION.CW : DIRECTION.CCW;
-        this.setDirection(lockDirection, this.calcOppsTrackLockTime(diff));
+        newDirection = diff >= 0 ? DIRECTION.CW : DIRECTION.CCW;
+        this.setDirection(newDirection, this.calcOppsTrackLockTime(diff));
       } else {
-        l('OUT');
-        this.rotateSpeed = 5 * baseSpeed;
-      }
-    }
-    if (!isOpposite) {
-      if (diffAbs <= this.attackPurview) {
-        l('INs');
+        if (inLeftEdge && this.worrior.revolutionDirection === DIRECTION.CW) {
+          this.setDirection(DIRECTION.CW, this.calcEdgeLockTime(), true);
+          return;
+        }
+
+        if (inRightEdge && this.worrior.revolutionDirection === DIRECTION.CCW) {
+          this.setDirection(DIRECTION.CCW, this.calcEdgeLockTime(), true);
+          // this.setDirection(DIRECTION.CCW);
+          return;
+        }
         this.rotateSpeed = baseSpeed;
-        lockDirection = diff >= 0 ? DIRECTION.CW : DIRECTION.CCW;
-        this.setDirection(lockDirection, this.calcSameTrackLockTime(diff));
-      } else {
-        l('OUT');
-        this.rotateSpeed = 5 * baseSpeed;
-      }
-      // var lockTime = this.calcLockTime(diff);
-      // this.turnBack();
-      // this.lockDirection(this.calcLockTime(diff));
-    }
-
-    // l(lockingDirection);
-    // l(diff);
-  };
-
-  // use it only when boss and worrior run in opposite direction
-  // and worrior coming in attackPurview
-  // and boss is faster than the worrior
-  // and need a time to lock changed boss.rotateDirection
-  Boss.prototype.calcOppsTrackLockTime = function (diff) {
-    var lockTime;
-    var relativeSpeed = this.rotateSpeed - this.worrior.revolutionSpeed;
-    if (this.worrior.revolutionDirection === DIRECTION.CW) {
-      if (diff <= 0) {
-        lockTime = 0;
-      } else {
-        lockTime = 2 * this.attackPurview / relativeSpeed;
+        newDirection = diff >= 0 ? DIRECTION.CW : DIRECTION.CCW;
+        this.setDirection(newDirection, this.calcSameTrackLockTime(diff));
       }
     } else {
-      if (diff <= 0) {
-        lockTime = 2 * this.attackPurview / relativeSpeed;
-      } else {
-        lockTime = 0;
-      }
+      this.rotateSpeed = 5 * baseSpeed;
     }
+    
+  };
 
+  Boss.prototype.calcEdgeLockTime = function () {
+    // isOpposite
+    var lockTime;
+    var speedDiff = this.rotateSpeed - this.worrior.revolutionSpeed;
+    var radian = 2 * this.attackPurview - this.attackPurview * 2 * edgePurviewMultiple - 2;
+
+    lockTime = radian / speedDiff;
     return lockTime;
-  }
+  };
 
-  // use it only when boss and worrior run in same direction
-  // and worrior coming in attackPurview
-  // and boss is faster than the worrior
-  // and need a time to lock changed boss.rotateDirection
-  Boss.prototype.calcSameTrackLockTime = function (diff) {
+  /**
+   * use it only when boss and worrior run in opposite direction
+   * and worrior coming in attackPurview
+   * and boss is faster than the worrior
+   * and need a time to lock changed boss.rotateDirection
+   */
+  Boss.prototype.calcOppsTrackLockTime = function (diff, cutDubbleEdge) {
     var lockTime;
     var speedSum = this.rotateSpeed + this.worrior.revolutionSpeed;
     var speedDiff = this.rotateSpeed - this.worrior.revolutionSpeed;
+    var radian = cutDubbleEdge
+      ? 2 * this.attackPurview - this.attackPurview * 2 * edgePurviewMultiple - 2
+      : 2 * this.attackPurview - this.attackPurview * edgePurviewMultiple - 2;
+
     if (this.rotateDirection === DIRECTION.CW) {
       if (diff <= 0) {
-        lockTime = 2 * this.attackPurview / speedSum;
+        lockTime = radian / speedDiff;
       } else {
-        lockTime = 2 * this.attackPurview / speedDiff;
+        lockTime = radian / speedSum;
       }
     } else {
       if (diff <= 0) {
-        lockTime = 2 * this.attackPurview / speedDiff;
+        lockTime = radian / speedSum;
       } else {
-        lockTime = 2 * this.attackPurview / speedSum;
+        lockTime = radian / speedDiff;
       }
     }
 
     return lockTime;
   }
 
-  // use it only when boss and worrior run in same direction
-  // and worrior getting out of attackPurview
-  // and boss is slower than the worrior
-  // and Boss need a time to turn back to the good place
+  /**
+   * use it only when boss and worrior run in same direction
+   * and worrior coming in attackPurview
+   * and boss is faster than the worrior
+   * and need a time to lock changed boss.rotateDirection
+   */
+  Boss.prototype.calcSameTrackLockTime = function (diff, cutDubbleEdge) {
+    var lockTime;
+    var speedSum = this.rotateSpeed + this.worrior.revolutionSpeed;
+    var speedDiff = this.rotateSpeed - this.worrior.revolutionSpeed;
+    var radian = cutDubbleEdge
+      ? 2 * this.attackPurview - this.attackPurview * 2 * edgePurviewMultiple - 2
+      : 2 * this.attackPurview - this.attackPurview * edgePurviewMultiple - 2;
+
+    if (this.rotateDirection === DIRECTION.CW) {
+      if (diff <= 0) {
+        lockTime = radian / speedSum;
+      } else {
+        lockTime = radian / speedDiff;
+      }
+    } else {
+      if (diff <= 0) {
+        lockTime = radian / speedDiff;
+      } else {
+        lockTime = radian / speedSum;
+      }
+    }
+
+    return lockTime;
+  }
+
+  /**
+   * use it only when boss and worrior run in same direction
+   * and worrior getting out of attackPurview
+   * and boss is slower than the worrior
+   * and Boss need a time to turn back to the good place
+   */
   Boss.prototype.calcBackLockTime = function (diff) {
     var lockTime;
     var relativeSpeed = this.rotateSpeed + this.worrior.revolutionSpeed;
-    if (this.worrior.revolutionDirection === DIRECTION.CW) {
+    if (this.rotateDirection === DIRECTION.CW) {
       if (diff <= 0) {
         lockTime = (-diff - this.attackPurview) / relativeSpeed;
       } else {
@@ -189,14 +239,14 @@
       return;
     }
 
-    l('lock');
+    //l('lock');
     // t = t || (2 * Math.PI / this.rotateSpeed);
     this.rotateDirection = direction;
 
     lockingDirection = true;
     setTimeout(function () {
       lockingDirection = false;
-      l('unlock');
+      //l('unlock');
     }, t);
   };
 

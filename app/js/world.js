@@ -94,6 +94,7 @@
           this.worrior.revolutionDirection = this.worrior.revolutionDirection === DIRECTION.CW
             ? DIRECTION.CCW
             : DIRECTION.CW;
+          this.worrior.accelerate();
         }.bind(this);
         
         $(this.renderer.view)

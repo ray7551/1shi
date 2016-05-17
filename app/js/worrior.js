@@ -1,17 +1,18 @@
 (function (global, Role, DIRECTION) {
   'use strict';
 
-
   var _super = Role;
+  var accelerateMutiple = 5;
+  var accelerateTime = 30; // don't set accelerateTime to long, it should shorter than 100
 
-  function Worrior(assets, world, revolutionSpeed) {
+  function Worrior(assets, world, revolutionInit, revolutionSpeed) {
     _super.call(this, assets, world);
     this.size = 40;
 
     this.revolutionDirection = DIRECTION.CW;
-    this.revolutionInit = Math.PI;  // the initial revolution around the boss. 公转角初始位移
+    this.revolutionInit = revolutionInit || Math.PI;  // the initial revolution around the boss. 公转角初始位移
 
-    this.revolutionSpeed = revolutionSpeed || 0.0006; // rad/ms
+    this.revolutionSpeed = revolutionSpeed || 0.0005; // rad/ms
     this.rotateSpeed = this.revolutionSpeed;     // rad/ms
   }
 
@@ -38,7 +39,8 @@
   };
 
   Worrior.prototype.update = function (dt, t) {
-    this.revolution = this.revolution % (2 * Math.PI);
+    this.revolution = Role.legalizeRadian(this.revolution);
+    this.sprite.rotation = Role.legalizeRadian(this.sprite.rotation);
 
     // l('position pivot', this.position, this.pivot);
     this.sprite.position.set(
@@ -49,10 +51,17 @@
     this.sprite.rotation = this.revolutionDirection === DIRECTION.CW
       ? this.sprite.rotation + this.rotateSpeed * dt
       : this.sprite.rotation - this.rotateSpeed * dt;
-    this.sprite.rotation = this.sprite.rotation % (2 * Math.PI);
     this.revolution = this.revolutionDirection === DIRECTION.CW
       ? this.revolution + this.revolutionSpeed * dt
       : this.revolution - this.revolutionSpeed * dt;
+  }
+
+  Worrior.prototype.accelerate = function () {
+    var originSpeed = this.revolutionSpeed;
+    this.revolutionSpeed = accelerateMutiple * this.revolutionSpeed;
+    setTimeout(function (argument) {
+      this.revolutionSpeed = originSpeed;
+    }.bind(this), accelerateTime);
   }
 
 
