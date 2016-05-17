@@ -21,7 +21,7 @@
     world.addDisplayObject(boss);
     world.addDisplayObject(worrior);
 
-    boss.aim(worrior);
+    boss.addEnemy(worrior);
 
     world.tick();
   }

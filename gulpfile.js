@@ -37,13 +37,13 @@ var onError = function (err) {
 };
 
 gulp.task('clean', function () {
-  return gulp.src('dist/*', { read: false })
+  return gulp.src('dist/*', {read: false})
     .pipe(clean());
 });
 
 
 gulp.task('clean-js', function () {
-  return gulp.src(dist.js, { read: false })
+  return gulp.src(dist.js, {read: false})
     .pipe(clean());
 });
 gulp.task('js', function () {
@@ -66,7 +66,7 @@ gulp.task('js-watch', ['js'], function() {
 
 
 gulp.task('clean-html', function () {
-  return gulp.src(dist.html, { read: false })
+  return gulp.src(dist.html, {read: false})
     .pipe(clean());
 });
 gulp.task('html', function () {

@@ -33,8 +33,10 @@
       this.setUnit();
 
       this.graphics = new PIXI.Graphics();
-
       this.playground = new PIXI.Container();
+
+      this.bindClick();
+
       this.render();
     }
 
@@ -47,6 +49,7 @@
       renderer: null,
       fullWindow: true,
       bgColor: 0x8232CD,
+      worrior: null,
 
       loadAssets: function (assets, cb) {
         assets.forEach(function (asset) {
@@ -55,7 +58,7 @@
         PIXI.loader.load(cb);
       },
 
-      addDisplayObject: function (obj) {
+      addDisplayObject: function (obj, name) {
         obj.init();
         if(Array.isArray(obj.sprites)) {
           obj.sprites.forEach(function(sprite) {
@@ -65,6 +68,10 @@
           this.playground.addChild(obj.sprites);
         }
         this.children.push(obj);
+
+        if(obj.constructor.name == 'Worrior') {
+          this.worrior = obj;
+        }
       },
 
       bindWindowResize: function () {
@@ -76,14 +83,26 @@
         }.bind(this));
       },
 
-      render: function () {
-        this.renderer.render(this.playground);
-      },
-
       bindOrientationChange: function () {
         window.addEventListener('orientationchange', function () {
           this.resize(document.body.clientWidth, document.body.clientHeight);
         }, false);
+      },
+
+      bindClick: function () {
+        var clickHandler = function () {
+          this.worrior.revolutionDirection = this.worrior.revolutionDirection === DIRECTION.CW
+            ? DIRECTION.CCW
+            : DIRECTION.CW;
+        }.bind(this);
+        
+        $(this.renderer.view)
+          .on('touchstart', clickHandler)
+          .on('click', clickHandler);
+      },
+
+      render: function () {
+        this.renderer.render(this.playground);
       },
 
       setUnit: function () {

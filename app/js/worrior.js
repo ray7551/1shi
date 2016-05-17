@@ -4,15 +4,14 @@
 
   var _super = Role;
 
-  function Worrior(assets, world) {
+  function Worrior(assets, world, revolutionSpeed) {
     _super.call(this, assets, world);
     this.size = 40;
 
     this.revolutionDirection = DIRECTION.CW;
 
-    this.rotateSpeed = 0.002;
-    // this.rotateSpeed = 0;
-    this.rovolutionSpeed = 0.002;
+    this.revolutionSpeed = revolutionSpeed || 0.0016; // rad/ms
+    this.rotateSpeed = this.revolutionSpeed;     // rad/ms
   }
 
   Worrior.prototype.init = function () {
@@ -38,6 +37,8 @@
   };
 
   Worrior.prototype.update = function (dt, t) {
+    this.revolution = this.revolution % (2 * Math.PI);
+
     // l('position pivot', this.position, this.pivot);
     this.sprite.position.set(
       - this.sprite.radius * Math.sin(this.revolution) + this.world.width / 2,
@@ -49,9 +50,8 @@
       : this.sprite.rotation - this.rotateSpeed * dt;
     this.sprite.rotation = this.sprite.rotation % (2 * Math.PI);
     this.revolution = this.revolutionDirection === DIRECTION.CW
-      ? this.revolution + this.rovolutionSpeed * dt
-      : this.revolution - this.rovolutionSpeed * dt;
-    this.revolution = this.revolution % (2 * Math.PI);
+      ? this.revolution + this.revolutionSpeed * dt
+      : this.revolution - this.revolutionSpeed * dt;
   }
 
 
