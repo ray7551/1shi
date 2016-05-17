@@ -9,8 +9,9 @@
     this.size = 40;
 
     this.revolutionDirection = DIRECTION.CW;
+    this.revolutionInit = Math.PI;  // the initial revolution around the boss. 公转角初始位移
 
-    this.revolutionSpeed = revolutionSpeed || 0.0016; // rad/ms
+    this.revolutionSpeed = revolutionSpeed || 0.0006; // rad/ms
     this.rotateSpeed = this.revolutionSpeed;     // rad/ms
   }
 
@@ -18,7 +19,7 @@
     _super.prototype.init.call(this);
     this.sprite.alpha = 1;
     this.sprite.rotation = 0;    // the rad around itself. 自转角位移
-    this.revolution = 0;  // the rad around the boss. 公转角位移
+    this.revolution = this.revolutionInit;  // the rad around the boss. 公转角位移
     this.sprite.anchor.set(.5, .5);
 
 
@@ -41,8 +42,8 @@
 
     // l('position pivot', this.position, this.pivot);
     this.sprite.position.set(
-      - this.sprite.radius * Math.sin(this.revolution) + this.world.width / 2,
-      this.sprite.radius * Math.cos(this.revolution) + this.world.height / 2
+      - this.sprite.radius * Math.sin(this.revolution - this.revolutionInit) + this.world.width / 2,
+      this.sprite.radius * Math.cos(this.revolution - this.revolutionInit) + this.world.height / 2
     );
 
     this.sprite.rotation = this.revolutionDirection === DIRECTION.CW

@@ -12,6 +12,7 @@
     this.rotateSpeed = 0; // rad/ms
     this.rotateDirection = DIRECTION.CW;
     Object.defineProperties(this, {
+      // attack range
       'attackPurview': {
         get: function () {
           // it should mainly determined by boss.rotateSpeed, worrior.revolutionSpeed and bulet speed
@@ -67,7 +68,7 @@
    * determine if it is time to change rotate direction and shoot
    */
   Boss.prototype.aim = function (t) {
-    var worriorRev = this.worrior.revolution + Math.PI;
+    var worriorRev = this.worrior.revolution;
     var diff = worriorRev - this.sprite.rotation;
     var diffAbs = Math.abs(diff) < Math.PI ? Math.abs(diff) : 2 * Math.PI - Math.abs(diff);
 
@@ -81,19 +82,23 @@
 
     if (isOpposite) {
       if (diffAbs <= this.attackPurview) {
+        l('INo');
         this.rotateSpeed = baseSpeed;
         lockDirection = diff >= 0 ? DIRECTION.CW : DIRECTION.CCW;
         this.setDirection(lockDirection, this.calcOppsTrackLockTime(diff));
       } else {
+        l('OUT');
         this.rotateSpeed = 5 * baseSpeed;
       }
     }
     if (!isOpposite) {
       if (diffAbs <= this.attackPurview) {
+        l('INs');
         this.rotateSpeed = baseSpeed;
         lockDirection = diff >= 0 ? DIRECTION.CW : DIRECTION.CCW;
-        this.setDirection(lockingDirection, this.calcSameTrackLockTime(diff));
+        this.setDirection(lockDirection, this.calcSameTrackLockTime(diff));
       } else {
+        l('OUT');
         this.rotateSpeed = 5 * baseSpeed;
       }
       // var lockTime = this.calcLockTime(diff);
@@ -184,14 +189,14 @@
       return;
     }
 
-    // l('lock');
+    l('lock');
     // t = t || (2 * Math.PI / this.rotateSpeed);
     this.rotateDirection = direction;
 
     lockingDirection = true;
     setTimeout(function () {
       lockingDirection = false;
-      // l('unlock');
+      l('unlock');
     }, t);
   };
 
