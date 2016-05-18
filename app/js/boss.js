@@ -15,7 +15,10 @@
   var findSpeedMultiple = 5;
   var findSpeed;
 
-  var edgePurviewMultiple = 0.05; // multiple for calc attack purview edge wide
+  var edgePurviewMultiple = 0.1; // multiple for calc attack purview edge wide
+  
+  var isLockingSpeed = false;
+  var lockSpeedTimeoutId;
 
   function Boss(assets, world) {
     _super.call(this, assets, world);
@@ -117,9 +120,9 @@
     var isOpposite = this.rotateSpeed * this.worrior.revolutionSpeed < 0;
     // var isFaster = this.rotateSpeed > this.worrior.revolutionSpeed;
 
-    if(diffAbs < 0) {
-      debugger;
-    }
+    // if(diffAbs < 0) {
+    //   debugger;
+    // }
     
     // if(!inEdge) {
     //   l(inEdge);
@@ -134,16 +137,19 @@
     //   debugger;
     // }
 
-    if (diffAbs <= this.attackPurview) {
+
+    if (inEdge) {
       this.rotateSpeed = Math.sign(this.rotateSpeed) * baseSpeed;
+      this.follow();
+      return;
+    }
+
+    if (diffAbs <= this.attackPurview) {
 
       // if(isOpposite && this.isInLeftEdge(worriorRev)) {
       //   debugger;
       // }
-
-      if (inEdge) {
-        this.follow();
-      }
+      this.rotateSpeed = Math.sign(this.rotateSpeed) * baseSpeed;
     } else {
       this.rotateSpeed = findSpeed;
     }
@@ -181,8 +187,6 @@
     return radian / relativeSpeed;
   };
 
-  var isLockingSpeed = false;
-  var lockSpeedTimeoutId;
   Boss.prototype.setSpeed = function (speed, t, force) {
     if (isLockingSpeed && !force) {
       return;
