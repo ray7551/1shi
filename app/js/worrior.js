@@ -10,19 +10,21 @@
     this.size = 40;
 
     this.revolutionDirection = DIRECTION.CW;
-    this.revolutionInit = revolutionInit || Math.PI;  // the initial revolution around the boss. 公转角初始位移
+    // the initial revolution around the boss. 公转角初始位移
+    this.revolutionInit = revolutionInit || Math.PI;
 
     this.revolutionSpeed = revolutionSpeed || 0.0005; // rad/ms
-    this.rotateSpeed = this.revolutionSpeed;     // rad/ms
+    this.rotateSpeed = this.revolutionSpeed;          // rad/ms
   }
 
   Worrior.prototype.init = function () {
     _super.prototype.init.call(this);
     this.sprite.alpha = 1;
-    this.sprite.rotation = 0;    // the rad around itself. 自转角位移
-    this.revolution = this.revolutionInit;  // the rad around the boss. 公转角位移
+    // the rad around itself. 自转角位移
+    this.sprite.rotation = 0;
+    // the rad around the boss. 公转角位移
+    this.revolution = this.revolutionInit;
     this.sprite.anchor.set(.5, .5);
-
 
     this.paint();
   };
@@ -42,7 +44,6 @@
     this.revolution = Role.legalizeRadian(this.revolution);
     this.sprite.rotation = Role.legalizeRadian(this.sprite.rotation);
 
-    // l('position pivot', this.position, this.pivot);
     this.sprite.position.set(
       - this.sprite.radius * Math.sin(this.revolution - this.revolutionInit) + this.world.width / 2,
       this.sprite.radius * Math.cos(this.revolution - this.revolutionInit) + this.world.height / 2
