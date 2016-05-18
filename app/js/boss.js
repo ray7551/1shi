@@ -46,14 +46,10 @@
     var yScale = this.size * this.unit / this.originSize.height;
     this.sprite.scale.set(xScale, yScale);
     this.sprite.position.set(
-      this.world.width / 2, // - this.width / 2,
-      this.world.height / 2 // - this.height / 2
+      this.world.width / 2,
+      this.world.height / 2
     );
     this.sprite.anchor.set(.5, .5);
-    //this.pivot.set(.5, .5);
-    // l('w h', this.width, this.height);
-    // l('position pivot', this.position, this.pivot);
-    // l('scale', this.sprite.scale);
   };
 
   Boss.prototype.update = function (dt, t) {
@@ -113,8 +109,7 @@
   Boss.prototype.aim = function (t) {
     this.worrior.legalizeRadian();
     var worriorRev = this.worrior.revolution;
-    // var diff = worriorRev - this.sprite.rotation;
-    var diffAbs = Role.absRadianDiff(worriorRev, this.sprite.rotation);//Math.abs(diff) < Math.PI ? Math.abs(diff) : 2 * Math.PI - Math.abs(diff);
+    var diffAbs = Role.absRadianDiff(worriorRev, this.sprite.rotation);
 
     // if w at edge part of attack purview
     var inEdge = this.isInEdge(worriorRev);
@@ -142,9 +137,9 @@
     if (diffAbs <= this.attackPurview) {
       this.rotateSpeed = Math.sign(this.rotateSpeed) * baseSpeed;
 
-      if(isOpposite && this.isInLeftEdge(worriorRev)) {
-        //debugger;
-      }
+      // if(isOpposite && this.isInLeftEdge(worriorRev)) {
+      //   debugger;
+      // }
 
       if (inEdge) {
         this.follow();
@@ -159,9 +154,16 @@
     this.setSpeed(
       -this.rotateSpeed,
       this.calcEdgeLockTime()
-      //true
+      // true
     );
   }
+
+  /*
+  // A smarter way to determine if it is time to change rotate direction and shoot
+  Boss.prototype.superAim = function () {
+
+  }
+  */
 
   /**
    * use it only when worrior run to the edge part of boss's attack purview
@@ -177,6 +179,79 @@
     var radian = 2 * this.attackPurview - this.attackPurview * 2 * edgePurviewMultiple - (Math.PI * 0.01);
 
     return radian / relativeSpeed;
+  };
+
+  var isLockingSpeed = false;
+  var lockSpeedTimeoutId;
+  Boss.prototype.setSpeed = function (speed, t, force) {
+    if (isLockingSpeed && !force) {
+      return;
+    }
+    if (isLockingSpeed && this.rotateSpeed === speed) {
+      return;
+    }
+    if (isLockingSpeed && force && typeof lockSpeedTimeoutId === 'number') {
+      clearTimeout(lockSpeedTimeoutId);
+    }
+
+    //l('lock');
+    this.rotateSpeed = speed;
+
+    isLockingSpeed = true;
+    lockSpeedTimeoutId = setTimeout(function () {
+      isLockingSpeed = false;
+      lockSpeedTimeoutId = undefined;
+      //l('unlock');
+    }, t);
+  };
+
+
+  var efficiency = {
+    count: {
+      inVision: 0,
+      outofVision: 0
+    },
+    recentData: [],
+    recentLength: 200,
+    sum: 0,
+    recentSum: 0,
+    totalCount: 0,
+    average: 0,
+    recentAverage: 0
+  };
+
+  // calculate how efficiently the aim algorithm is
+  Boss.prototype.audit = function () {
+    var diff = Role.absRadianDiff(this.worrior.revolution, this.sprite.rotation);
+
+    if (diff < this.attackPurview) {
+      efficiency.count.inVision++;
+    } else {
+      efficiency.count.outofVision++;
+    }
+    efficiency.totalCount++;
+
+    if (efficiency.count.inVision === 0) {
+      return;
+    }
+
+    var aimEfficiency = efficiency.count.inVision / (efficiency.count.inVision + efficiency.count.outofVision) * 100;
+
+    if (efficiency.recentData.length >= efficiency.recentLength) {
+      var shifted = efficiency.recentData.shift();
+      efficiency.recentSum -= shifted;
+    }
+    efficiency.recentData.push(aimEfficiency);
+    efficiency.sum += aimEfficiency;
+    efficiency.recentSum += aimEfficiency;
+
+    efficiency.average = efficiency.sum / efficiency.totalCount;
+    efficiency.recentAverage = efficiency.recentSum / efficiency.recentLength;
+
+    //l(efficiency.average, efficiency.recentAverage);
+    // l(efficiency.average);
+    console.clear();
+    l(efficiency.recentAverage);
   };
 
   /**
@@ -266,91 +341,6 @@
 
     return lockTime;
   }
-
-  var isLockingSpeed = false;
-  var lockSpeedTimeoutId;
-  Boss.prototype.setSpeed = function (speed, t, force) {
-    if (isLockingSpeed && !force) {
-      return;
-    }
-    if (isLockingSpeed && this.rotateSpeed === speed) {
-      return;
-    }
-    if (isLockingSpeed && force && typeof lockSpeedTimeoutId === 'number') {
-      clearTimeout(lockSpeedTimeoutId);
-    }
-
-    //l('lock');
-    // t = t || (2 * Math.PI / this.rotateSpeed);
-    this.rotateSpeed = speed;
-
-    isLockingSpeed = true;
-    lockSpeedTimeoutId = setTimeout(function () {
-      isLockingSpeed = false;
-      lockSpeedTimeoutId = undefined;
-      //l('unlock');
-    }, t);
-  };
-
-
-  var efficiency = {
-    count: {
-      inVision: 0,
-      outofVision: 0
-    },
-    recentData: [],
-    recentLength: 200,
-    sum: 0,
-    recentSum: 0,
-    totalCount: 0,
-    average: 0,
-    recentAverage: 0
-  };
-
-  // calculate how efficiently the aim algorithm is
-  Boss.prototype.audit = function () {
-    var diff = Role.absRadianDiff(this.worrior.revolution, this.sprite.rotation);
-
-    if (diff < this.attackPurview) {
-      efficiency.count.inVision++;
-    } else {
-      efficiency.count.outofVision++;
-    }
-    efficiency.totalCount++;
-
-    if (efficiency.count.inVision === 0) {
-      return;
-    }
-
-    var aimEfficiency = efficiency.count.inVision / (efficiency.count.inVision + efficiency.count.outofVision) * 100;
-
-    if (efficiency.recentData.length >= efficiency.recentLength) {
-      var shifted = efficiency.recentData.shift();
-      efficiency.recentSum -= shifted;
-    }
-    efficiency.recentData.push(aimEfficiency);
-    efficiency.sum += aimEfficiency;
-    efficiency.recentSum += aimEfficiency;
-
-    efficiency.average = efficiency.sum / efficiency.totalCount;
-    efficiency.recentAverage = efficiency.recentSum / efficiency.recentLength;
-
-    //l(efficiency.average, efficiency.recentAverage);
-    // l(efficiency.average);
-    console.clear();
-    l(efficiency.recentAverage);
-  };
-  /*
-  // A smart way to determine if it is time to change rotate direction and shoot
-  Boss.prototype.superAim = function () {
-
-  }*/
-
-  /*
-  // produce a radom acceleration between 1 and 3
-  Boss.randomAccelerate = function() {
-
-  };*/
 
   global.Boss = Boss;
 })(window, Role);

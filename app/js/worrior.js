@@ -3,7 +3,7 @@
 
   var _super = Role;
   var accelerateMutiple = 5;
-  var accelerateTime = 300; // don't set accelerateTime to long, it should shorter than 100
+  var accelerateTime = 30; // don't set accelerateTime to long, it should shorter than 100
   var initSpeed;
   var turnBackTimeoutId;
 
