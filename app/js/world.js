@@ -35,8 +35,6 @@
       this.graphics = new PIXI.Graphics();
       this.playground = new PIXI.Container();
 
-      this.bindClick();
-
       this.render();
     }
 
@@ -71,6 +69,7 @@
 
         if(obj.constructor.name == 'Worrior') {
           this.worrior = obj;
+          this.bindClick();
         }
       },
 

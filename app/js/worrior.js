@@ -3,7 +3,9 @@
 
   var _super = Role;
   var accelerateMutiple = 5;
-  var accelerateTime = 30; // don't set accelerateTime to long, it should shorter than 100
+  var accelerateTime = 300; // don't set accelerateTime to long, it should shorter than 100
+  var initSpeed;
+  var turnBackTimeoutId;
 
   function Worrior(assets, world, revolutionInit, revolutionSpeed) {
     _super.call(this, assets, world);
@@ -11,7 +13,8 @@
 
     // the initial revolution around the boss. 公转角初始位移
     this.revolutionInit = revolutionInit || Math.PI;
-    this.revolutionSpeed = revolutionSpeed || 0.0005; // rad/ms
+    initSpeed = revolutionSpeed || 0.0005;
+    this.revolutionSpeed = initSpeed; // rad/ms
     // this.rotateSpeed = this.revolutionSpeed;          // rad/ms
   }
 
@@ -51,13 +54,24 @@
   }
 
   Worrior.prototype.turnBack = function () {
-    var originSpeed = -this.revolutionSpeed;
-    this.revolutionSpeed = -this.revolutionSpeed;
-    this.revolutionSpeed = accelerateMutiple * this.revolutionSpeed;
+    this._turnBack();
+    if(typeof turnBackTimeoutId === 'undefined') {
+      this._accelerate(accelerateTime);
+    }
+  }
 
-    setTimeout(function (argument) {
+  Worrior.prototype._turnBack = function () {
+    this.revolutionSpeed = -this.revolutionSpeed;
+  }
+
+  Worrior.prototype._accelerate = function (time) {
+    var originSpeed = this.revolutionSpeed;
+    this.revolutionSpeed = accelerateMutiple * originSpeed;
+
+    turnBackTimeoutId = setTimeout(function (argument) {
       this.revolutionSpeed = originSpeed;
-    }.bind(this), accelerateTime);
+      turnBackTimeoutId = undefined;
+    }.bind(this), time);
   }
 
   Worrior.prototype.legalizeRadian = function () {

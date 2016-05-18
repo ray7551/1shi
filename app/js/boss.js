@@ -268,6 +268,7 @@
   }
 
   var isLockingSpeed = false;
+  var lockSpeedTimeoutId;
   Boss.prototype.setSpeed = function (speed, t, force) {
     if (isLockingSpeed && !force) {
       return;
@@ -275,14 +276,18 @@
     if (isLockingSpeed && this.rotateSpeed === speed) {
       return;
     }
+    if (isLockingSpeed && force && typeof lockSpeedTimeoutId === 'number') {
+      clearTimeout(lockSpeedTimeoutId);
+    }
 
     //l('lock');
     // t = t || (2 * Math.PI / this.rotateSpeed);
     this.rotateSpeed = speed;
 
     isLockingSpeed = true;
-    setTimeout(function () {
+    lockSpeedTimeoutId = setTimeout(function () {
       isLockingSpeed = false;
+      lockSpeedTimeoutId = undefined;
       //l('unlock');
     }, t);
   };
