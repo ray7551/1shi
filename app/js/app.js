@@ -1,5 +1,5 @@
-// $(function () {
-//   'use strict';
+$(function () {
+  'use strict';
 
   //var world = new World('main', 0x8232CD, 500, 900);
   // orbit 0x8232CD
@@ -22,7 +22,7 @@
   function main() {
     // △
     var boss = new Boss(['res/img/boss.png'], world);
-    var worrior = new Worrior(['res/img/worrior.png'], world, Math.PI, 0.002);
+    var worrior = new Worrior(['res/img/worrior.png'], world, Math.PI, 0.0010);
     // var worrior = new Worrior(['res/img/worrior.png'], world, Math.PI);
 
     world.addDisplayObject(boss);
@@ -34,4 +34,4 @@
   }
 
 
-// });
+});

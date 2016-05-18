@@ -6,16 +6,17 @@
 
   // baseSpeed is init speed of boss
   // it should faster than worrior.revolutionSpeed
-  // var baseSpeedMultiple = 1.65; // 1.65 is good for debug
-  var baseSpeedMultiple = 1.1;
+  var baseSpeedMultiple = 1.65;
+  // baseSpeedMultiple = 1.65; // 1.65 is good for debug
   var baseSpeed;
 
   // findSpeed is boss's speed when worrior out of purview
   // it should faster than worrior.revolutionSpeed
   var findSpeedMultiple = 5;
   var findSpeed;
-
-  var edgePurviewMultiple = 0.1; // multiple for calc attack purview edge wide
+  
+  var defaultAttackPurview = Math.PI / 8;
+  var purviewEdgeMultiple = 0.4; // multiple for calc attack purview edge wide
   
   var isLockingSpeed = false;
   var lockSpeedTimeoutId;
@@ -30,8 +31,8 @@
       'attackPurview': {
         get: function () {
           // it should mainly determined by boss.rotateSpeed, worrior.revolutionSpeed and bulet speed
-          // now temporarily use Math.PI / 8 as attackPurview 
-          return Math.PI / 4;
+          // now temporarily use defaultAttackPurview as attackPurview 
+          return defaultAttackPurview;
         }
       }
     });
@@ -86,9 +87,9 @@
    */
   Boss.prototype.isInLeftEdge = function (worriorRev) {
     // radian of left line of the edge
-    var radianLeft = this.sprite.rotation - this.attackPurview;
+    var radianRight = this.sprite.rotation - this.attackPurview;
     // radian of right line of the edge
-    var radianRight = radianLeft + this.attackPurview * edgePurviewMultiple;
+    var radianLeft = radianRight - this.attackPurview * purviewEdgeMultiple;
     return Role.isBetween(worriorRev, radianLeft, radianRight);
   };
 
@@ -97,9 +98,9 @@
    */
   Boss.prototype.isInRightEdge = function (worriorRev) {
     // radian of right line of the edge
-    var radianRight = this.sprite.rotation + this.attackPurview;
+    var radianLeft = this.sprite.rotation + this.attackPurview;
     // radian of left line of the edge
-    var radianLeft = radianRight - this.attackPurview * edgePurviewMultiple;
+    var radianRight = radianLeft + this.attackPurview * purviewEdgeMultiple;
     return Role.isBetween(worriorRev, radianLeft, radianRight);
   };
 
@@ -118,25 +119,6 @@
     var inEdge = this.isInEdge(worriorRev);
     // if b and w run in opposite direciton
     var isOpposite = this.rotateSpeed * this.worrior.revolutionSpeed < 0;
-    // var isFaster = this.rotateSpeed > this.worrior.revolutionSpeed;
-
-    // if(diffAbs < 0) {
-    //   debugger;
-    // }
-    
-    // if(!inEdge) {
-    //   l(inEdge);
-    // } else {
-    //   debugger;
-    // }
-    // if(isOpposite && !inEdge) {
-    //   debugger;
-    // }
-
-    // if(inEdge) {
-    //   debugger;
-    // }
-
 
     if (inEdge) {
       this.rotateSpeed = Math.sign(this.rotateSpeed) * baseSpeed;
@@ -144,11 +126,7 @@
       return;
     }
 
-    if (diffAbs <= this.attackPurview) {
-
-      // if(isOpposite && this.isInLeftEdge(worriorRev)) {
-      //   debugger;
-      // }
+    if (diffAbs <= this.attackPurview * (1 + purviewEdgeMultiple)) {
       this.rotateSpeed = Math.sign(this.rotateSpeed) * baseSpeed;
     } else {
       this.rotateSpeed = findSpeed;
@@ -164,13 +142,6 @@
     );
   }
 
-  /*
-  // A smarter way to determine if it is time to change rotate direction and shoot
-  Boss.prototype.superAim = function () {
-
-  }
-  */
-
   /**
    * use it only when worrior run to the edge part of boss's attack purview
    * and boss is faster than the worrior
@@ -182,7 +153,7 @@
     var relativeSpeed = isOpposite
       ? Math.abs(this.rotateSpeed - this.worrior.revolutionSpeed)
       : Math.abs(this.rotateSpeed + this.worrior.revolutionSpeed);
-    var radian = 2 * this.attackPurview - this.attackPurview * 2 * edgePurviewMultiple - (Math.PI * 0.01);
+    var radian = 2 * this.attackPurview - (Math.PI * 0.01);
 
     return radian / relativeSpeed;
   };
@@ -269,8 +240,8 @@
     var speedSum = this.rotateSpeed + this.worrior.revolutionSpeed;
     var speedDiff = this.rotateSpeed - this.worrior.revolutionSpeed;
     var radian = cutDubbleEdge
-      ? 2 * this.attackPurview - this.attackPurview * 2 * edgePurviewMultiple
-      : 2 * this.attackPurview - this.attackPurview * edgePurviewMultiple;
+      ? 2 * this.attackPurview - this.attackPurview * 2 * purviewEdgeMultiple
+      : 2 * this.attackPurview - this.attackPurview * purviewEdgeMultiple;
 
     if (this.rotateSpeed >=0) {
       if (diff <= 0) {
@@ -300,8 +271,8 @@
     var speedSum = this.rotateSpeed + this.worrior.revolutionSpeed;
     var speedDiff = this.rotateSpeed - this.worrior.revolutionSpeed;
     var radian = cutDubbleEdge
-      ? 2 * this.attackPurview - this.attackPurview * 2 * edgePurviewMultiple
-      : 2 * this.attackPurview - this.attackPurview * edgePurviewMultiple;
+      ? 2 * this.attackPurview - this.attackPurview * 2 * purviewEdgeMultiple
+      : 2 * this.attackPurview - this.attackPurview * purviewEdgeMultiple;
 
     if (this.rotateSpeed >= 0) {
       if (diff <= 0) {
