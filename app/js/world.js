@@ -91,10 +91,7 @@
 
       bindClick: function () {
         var clickHandler = function () {
-          this.worrior.revolutionDirection = this.worrior.revolutionDirection === DIRECTION.CW
-            ? DIRECTION.CCW
-            : DIRECTION.CW;
-          this.worrior.accelerate();
+          this.worrior.turnBack();
         }.bind(this);
         
         $(this.renderer.view)

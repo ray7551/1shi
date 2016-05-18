@@ -22,7 +22,8 @@
   function main() {
     // △
     var boss = new Boss(['res/img/boss.png'], world);
-    var worrior = new Worrior(['res/img/worrior.png'], world, Math.PI, 0.0005);
+    var worrior = new Worrior(['res/img/worrior.png'], world, Math.PI, 0.0012);
+    // var worrior = new Worrior(['res/img/worrior.png'], world, Math.PI);
 
     world.addDisplayObject(boss);
     world.addDisplayObject(worrior);

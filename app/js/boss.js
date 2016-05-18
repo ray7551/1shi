@@ -3,16 +3,24 @@
 
   // Boss extends Role
   var _super = Role;
-  var visionPurview = Math.PI / 8;
-  var baseSpeedMultiple = 1.5;
+
+  // baseSpeed is init speed of boss
+  // it should faster than worrior.revolutionSpeed
+  // var baseSpeedMultiple = 1.65; // 1.65 is good for debug
+  var baseSpeedMultiple = 1.1;
   var baseSpeed;
+
+  // findSpeed is boss's speed when worrior out of purview
+  // it should faster than worrior.revolutionSpeed
+  var findSpeedMultiple = 5;
+  var findSpeed;
+
   var edgePurviewMultiple = 0.05; // multiple for calc attack purview edge wide
 
   function Boss(assets, world) {
     _super.call(this, assets, world);
     this.size = 60;
     this.rotateSpeed = 0; // rad/ms
-    this.rotateDirection = DIRECTION.CW;
     this.rotateInit = 0;
     Object.defineProperties(this, {
       // attack range
@@ -55,9 +63,7 @@
     this.aim(t);
     //this.audit();
 
-    this.sprite.rotation = this.rotateDirection === DIRECTION.CW 
-      ? this.sprite.rotation + this.rotateSpeed * dt 
-      : this.sprite.rotation - this.rotateSpeed * dt;
+    this.sprite.rotation = this.sprite.rotation + this.rotateSpeed * dt;
     // l(this.rotateDirection);
   };
 
@@ -65,84 +71,112 @@
     this.worrior = worrior;
     //this.sprite.rotation = this.worrior.revolution + Math.PI;
     baseSpeed = baseSpeedMultiple * this.worrior.revolutionSpeed;
+    findSpeed = findSpeedMultiple * this.worrior.revolutionSpeed;
     this.rotateSpeed = baseSpeed;
+  };
+
+  /**
+   * if the worrior in the edge part of purview
+   */
+  Boss.prototype.isInEdge = function (worriorRev) {
+    return this.isInLeftEdge(worriorRev) || this.isInRightEdge(worriorRev);
+  };
+
+  /**
+   * if the worrior in the left edge part of purview
+   */
+  Boss.prototype.isInLeftEdge = function (worriorRev) {
+    // radian of left line of the edge
+    var radianLeft = this.sprite.rotation - this.attackPurview;
+    // radian of right line of the edge
+    var radianRight = radianLeft + this.attackPurview * edgePurviewMultiple;
+    return Role.isBetween(worriorRev, radianLeft, radianRight);
+  };
+
+  /**
+   * if the worrior in the right edge part of purview
+   */
+  Boss.prototype.isInRightEdge = function (worriorRev) {
+    // radian of right line of the edge
+    var radianRight = this.sprite.rotation + this.attackPurview;
+    // radian of left line of the edge
+    var radianLeft = radianRight - this.attackPurview * edgePurviewMultiple;
+    return Role.isBetween(worriorRev, radianLeft, radianRight);
   };
 
   /*
    * Aim at the worrior
    * determine if it is time to change rotate direction and shoot
+   * @TODO consider the circumstance of boss is slower
+   * now it is certain that this.rotateSpeed > this.worrior.revolutionSpeed
    */
   Boss.prototype.aim = function (t) {
-    var worriorRev = Role.legalizeRadian(this.worrior.revolution);
-    var diff = worriorRev - this.sprite.rotation;
-    var diffAbs = Math.abs(diff) < Math.PI ? Math.abs(diff) : 2 * Math.PI - Math.abs(diff);
+    this.worrior.legalizeRadian();
+    var worriorRev = this.worrior.revolution;
+    // var diff = worriorRev - this.sprite.rotation;
+    var diffAbs = Role.absRadianDiff(worriorRev, this.sprite.rotation);//Math.abs(diff) < Math.PI ? Math.abs(diff) : 2 * Math.PI - Math.abs(diff);
 
-    // if w at edge part of attack purvieiw
-    var inEdge = this.attackPurview - diffAbs > this.attackPurview * edgePurviewMultiple;
-    var inLeftEdge = inEdge && diff < 0;
-    var inRightEdge = inEdge && diff > 0;
+    // if w at edge part of attack purview
+    var inEdge = this.isInEdge(worriorRev);
     // if b and w run in opposite direciton
-    var isOpposite = this.worrior.revolutionDirection !== this.rotateDirection;
-
-    // @TODO consider the circumstance of boss is slower
-    // now it certain that this.rotateSpeed > this.worrior.revolutionSpeed
+    var isOpposite = this.rotateSpeed * this.worrior.revolutionSpeed < 0;
     // var isFaster = this.rotateSpeed > this.worrior.revolutionSpeed;
-
-    var newDirection;
-
-    // if (lockingDirection) {
-    //   return;
-    // }
 
     if(diffAbs < 0) {
       debugger;
     }
+    
+    // if(!inEdge) {
+    //   l(inEdge);
+    // } else {
+    //   debugger;
+    // }
+    // if(isOpposite && !inEdge) {
+    //   debugger;
+    // }
+
+    // if(inEdge) {
+    //   debugger;
+    // }
 
     if (diffAbs <= this.attackPurview) {
+      this.rotateSpeed = Math.sign(this.rotateSpeed) * baseSpeed;
 
-      this.rotateSpeed = baseSpeed;
-      if (isOpposite) {
-        if (inLeftEdge && this.worrior.revolutionDirection === DIRECTION.CCW) {
-          this.setDirection(DIRECTION.CW, this.calcEdgeLockTime(), true);
-          return;
-        }
+      if(isOpposite && this.isInLeftEdge(worriorRev)) {
+        //debugger;
+      }
 
-        if (inRightEdge && this.worrior.revolutionDirection === DIRECTION.CW) {
-          this.setDirection(DIRECTION.CCW, this.calcEdgeLockTime(), true);
-          return;
-        }
-        this.rotateSpeed = baseSpeed;
-        newDirection = diff >= 0 ? DIRECTION.CW : DIRECTION.CCW;
-        this.setDirection(newDirection, this.calcOppsTrackLockTime(diff));
-      } else {
-        if (inLeftEdge && this.worrior.revolutionDirection === DIRECTION.CW) {
-          this.setDirection(DIRECTION.CW, this.calcEdgeLockTime(), true);
-          return;
-        }
-
-        if (inRightEdge && this.worrior.revolutionDirection === DIRECTION.CCW) {
-          this.setDirection(DIRECTION.CCW, this.calcEdgeLockTime(), true);
-          // this.setDirection(DIRECTION.CCW);
-          return;
-        }
-        this.rotateSpeed = baseSpeed;
-        newDirection = diff >= 0 ? DIRECTION.CW : DIRECTION.CCW;
-        this.setDirection(newDirection, this.calcSameTrackLockTime(diff));
+      if (inEdge) {
+        this.follow();
       }
     } else {
-      this.rotateSpeed = 5 * baseSpeed;
+      this.rotateSpeed = findSpeed;
     }
-    
+
   };
 
-  Boss.prototype.calcEdgeLockTime = function () {
-    // isOpposite
-    var lockTime;
-    var speedDiff = this.rotateSpeed - this.worrior.revolutionSpeed;
-    var radian = 2 * this.attackPurview - this.attackPurview * 2 * edgePurviewMultiple - 2;
+  Boss.prototype.follow = function () {
+    this.setSpeed(
+      -this.rotateSpeed,
+      this.calcEdgeLockTime()
+      //true
+    );
+  }
 
-    lockTime = radian / speedDiff;
-    return lockTime;
+  /**
+   * use it only when worrior run to the edge part of boss's attack purview
+   * and boss is faster than the worrior
+   * and boss have to turn back
+   * and need a time to lock changed boss.rotateDirection
+   */
+  Boss.prototype.calcEdgeLockTime = function () {
+    var isOpposite = this.rotateSpeed * this.worrior.revolutionSpeed < 0;
+    var relativeSpeed = isOpposite
+      ? Math.abs(this.rotateSpeed - this.worrior.revolutionSpeed)
+      : Math.abs(this.rotateSpeed + this.worrior.revolutionSpeed);
+    var radian = 2 * this.attackPurview - this.attackPurview * 2 * edgePurviewMultiple - (Math.PI * 0.01);
+
+    return radian / relativeSpeed;
   };
 
   /**
@@ -156,10 +190,10 @@
     var speedSum = this.rotateSpeed + this.worrior.revolutionSpeed;
     var speedDiff = this.rotateSpeed - this.worrior.revolutionSpeed;
     var radian = cutDubbleEdge
-      ? 2 * this.attackPurview - this.attackPurview * 2 * edgePurviewMultiple - 2
-      : 2 * this.attackPurview - this.attackPurview * edgePurviewMultiple - 2;
+      ? 2 * this.attackPurview - this.attackPurview * 2 * edgePurviewMultiple
+      : 2 * this.attackPurview - this.attackPurview * edgePurviewMultiple;
 
-    if (this.rotateDirection === DIRECTION.CW) {
+    if (this.rotateSpeed >=0) {
       if (diff <= 0) {
         lockTime = radian / speedDiff;
       } else {
@@ -187,10 +221,10 @@
     var speedSum = this.rotateSpeed + this.worrior.revolutionSpeed;
     var speedDiff = this.rotateSpeed - this.worrior.revolutionSpeed;
     var radian = cutDubbleEdge
-      ? 2 * this.attackPurview - this.attackPurview * 2 * edgePurviewMultiple - 2
-      : 2 * this.attackPurview - this.attackPurview * edgePurviewMultiple - 2;
+      ? 2 * this.attackPurview - this.attackPurview * 2 * edgePurviewMultiple
+      : 2 * this.attackPurview - this.attackPurview * edgePurviewMultiple;
 
-    if (this.rotateDirection === DIRECTION.CW) {
+    if (this.rotateSpeed >= 0) {
       if (diff <= 0) {
         lockTime = radian / speedSum;
       } else {
@@ -216,7 +250,7 @@
   Boss.prototype.calcBackLockTime = function (diff) {
     var lockTime;
     var relativeSpeed = this.rotateSpeed + this.worrior.revolutionSpeed;
-    if (this.rotateDirection === DIRECTION.CW) {
+    if (this.rotateSpeed >= 0) {
       if (diff <= 0) {
         lockTime = (-diff - this.attackPurview) / relativeSpeed;
       } else {
@@ -233,33 +267,32 @@
     return lockTime;
   }
 
-  var lockingDirection = false;
-  Boss.prototype.setDirection = function (direction, t, force) {
-    if (lockingDirection && !force) {
+  var isLockingSpeed = false;
+  Boss.prototype.setSpeed = function (speed, t, force) {
+    if (isLockingSpeed && !force) {
+      return;
+    }
+    if (isLockingSpeed && this.rotateSpeed === speed) {
       return;
     }
 
     //l('lock');
     // t = t || (2 * Math.PI / this.rotateSpeed);
-    this.rotateDirection = direction;
+    this.rotateSpeed = speed;
 
-    lockingDirection = true;
+    isLockingSpeed = true;
     setTimeout(function () {
-      lockingDirection = false;
+      isLockingSpeed = false;
       //l('unlock');
     }, t);
   };
 
-  // set rotate direction to the opposite one
-  Boss.oppositeDirection = function (direction) {
-    return direction === DIRECTION.CW ? DIRECTION.CCW : DIRECTION.CW;
-  };
 
-  var count = {
-    inVision: 0,
-    outofVision: 0
-  };
   var efficiency = {
+    count: {
+      inVision: 0,
+      outofVision: 0
+    },
     recentData: [],
     recentLength: 200,
     sum: 0,
@@ -268,23 +301,23 @@
     average: 0,
     recentAverage: 0
   };
+
   // calculate how efficiently the aim algorithm is
   Boss.prototype.audit = function () {
-    var worriorRev = this.worrior.revolution + Math.PI;
-    var diff = Math.abs((worriorRev - this.sprite.rotation) % (2 * Math.PI));
+    var diff = Role.absRadianDiff(this.worrior.revolution, this.sprite.rotation);
 
-    if (diff < (visionPurview / 2)) { // vision wide PI/12
-      count.inVision++;
+    if (diff < this.attackPurview) {
+      efficiency.count.inVision++;
     } else {
-      count.outofVision++;
+      efficiency.count.outofVision++;
     }
     efficiency.totalCount++;
 
-    if (count.inVision === 0) {
+    if (efficiency.count.inVision === 0) {
       return;
     }
 
-    var aimEfficiency = count.inVision / (count.inVision + count.outofVision) * 100;
+    var aimEfficiency = efficiency.count.inVision / (efficiency.count.inVision + efficiency.count.outofVision) * 100;
 
     if (efficiency.recentData.length >= efficiency.recentLength) {
       var shifted = efficiency.recentData.shift();
@@ -299,6 +332,7 @@
 
     //l(efficiency.average, efficiency.recentAverage);
     // l(efficiency.average);
+    console.clear();
     l(efficiency.recentAverage);
   };
   /*

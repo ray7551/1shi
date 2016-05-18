@@ -46,6 +46,28 @@
       : radian;
   };
 
+  Role.absRadianDiff = function (radian1, radian2) {
+    var diff = Role.legalizeRadian(radian1) - Role.legalizeRadian(radian2);
+    var abs = Math.abs(diff);
+    return abs < Math.PI 
+      ? abs
+      : 2 * Math.PI - abs;
+  };
+
+  Role.isBetween = function (radian, edge1, edge2) {
+    radian = Role.legalizeRadian(radian);
+    edge1 = Role.legalizeRadian(edge1);
+    edge2 = Role.legalizeRadian(edge2);
+    var abs = Math.abs(edge1 - edge2);
+
+    if(abs > Math.PI) {
+      return Role.isBetween(edge1 + Math.PI, edge2 + Math.PI);
+    } else {
+      return (radian >= edge1 && radian <= edge2)
+        || (radian >= edge2 && radian <= edge1)
+    }
+  }
+
 
   Role.prototype = {
     init: function () {

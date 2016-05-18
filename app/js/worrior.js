@@ -9,12 +9,10 @@
     _super.call(this, assets, world);
     this.size = 40;
 
-    this.revolutionDirection = DIRECTION.CW;
     // the initial revolution around the boss. 公转角初始位移
     this.revolutionInit = revolutionInit || Math.PI;
-
     this.revolutionSpeed = revolutionSpeed || 0.0005; // rad/ms
-    this.rotateSpeed = this.revolutionSpeed;          // rad/ms
+    // this.rotateSpeed = this.revolutionSpeed;          // rad/ms
   }
 
   Worrior.prototype.init = function () {
@@ -41,30 +39,31 @@
   };
 
   Worrior.prototype.update = function (dt, t) {
-    this.revolution = Role.legalizeRadian(this.revolution);
-    this.sprite.rotation = Role.legalizeRadian(this.sprite.rotation);
+    this.legalizeRadian();
 
     this.sprite.position.set(
       - this.sprite.radius * Math.sin(this.revolution - this.revolutionInit) + this.world.width / 2,
       this.sprite.radius * Math.cos(this.revolution - this.revolutionInit) + this.world.height / 2
     );
 
-    this.sprite.rotation = this.revolutionDirection === DIRECTION.CW
-      ? this.sprite.rotation + this.rotateSpeed * dt
-      : this.sprite.rotation - this.rotateSpeed * dt;
-    this.revolution = this.revolutionDirection === DIRECTION.CW
-      ? this.revolution + this.revolutionSpeed * dt
-      : this.revolution - this.revolutionSpeed * dt;
+    this.revolution = this.revolution + this.revolutionSpeed * dt;
+    this.sprite.rotation = this.revolution - this.revolutionInit;
   }
 
-  Worrior.prototype.accelerate = function () {
-    var originSpeed = this.revolutionSpeed;
+  Worrior.prototype.turnBack = function () {
+    var originSpeed = -this.revolutionSpeed;
+    this.revolutionSpeed = -this.revolutionSpeed;
     this.revolutionSpeed = accelerateMutiple * this.revolutionSpeed;
+
     setTimeout(function (argument) {
       this.revolutionSpeed = originSpeed;
     }.bind(this), accelerateTime);
   }
 
+  Worrior.prototype.legalizeRadian = function () {
+    this.revolution = Role.legalizeRadian(this.revolution);
+    this.sprite.rotation = Role.legalizeRadian(this.sprite.rotation);
+  }
 
   global.Worrior = Worrior;
 })(window, Role, DIRECTION);
