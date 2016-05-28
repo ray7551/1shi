@@ -96,7 +96,7 @@ gulp.task('resource', function () {
     .pipe(gulp.dest(dist.res));
 });
 
-// use default task to launch Browsersync and watch JS files
+// use default task to launch BrowserSync and watch JS files
 gulp.task('serve', ['default'], function () {
 
   // Serve files from the root of this project
