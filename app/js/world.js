@@ -120,6 +120,7 @@
   World.prototype.bindOrientationChange = function () {
     $(window).on('orientationchange', function () {
       this.pause();
+      this.bindResume();
       this.resize(document.body.clientWidth, document.body.clientHeight);
     }.bind(this));
   };
@@ -157,6 +158,7 @@
     $(window).on(visibilityChange, function () {
       if (document[hidden]) {
         this.pause();
+        this.bindResume();
       }
     }.bind(this));
   };
@@ -295,8 +297,6 @@
     this.children.boss.pauseShoot();
     this.children.warrior.pauseAddBullet();
     this.ticker.stop();
-    this.bindResume();
-    //cancelAnimationFrame(this.requestID);
   };
 
   World.prototype.resume = function () {
@@ -306,8 +306,8 @@
   };
 
   World.prototype.end = function () {
-    this.pause();
     this.isEnd = true;
+    this.pause();
   };
 
   global.World = World;

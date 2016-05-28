@@ -22,7 +22,7 @@ var CONFIG = {
     health: 100,
     initAlpha: 1,
     minAlpha: 0.4,
-    shootInterval: 200, // ms
+    shootInterval: 800,
     rotateInit: Math.PI,
     revolutionInit: 0,   // boss has no revolution, but boss's bullet need revolutionInit 
     bulletSpeed: 0.05
@@ -34,7 +34,7 @@ var CONFIG = {
     accelerateTime: 30,
     health: 20,
     bulletSpeed: -0.05,
-    bulletNumLimit: 5,
+    bulletNumLimit: 4,
     bulletAddInterval: 1000,
 
     revolutionInit: Math.PI,
