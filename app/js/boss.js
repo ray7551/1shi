@@ -15,7 +15,7 @@
    * */
   function Boss(assets, world) {
     _super.call(this, assets, world);
-    this.config = Object.assign({}, CONFIG.boss);
+    this.config = Util.extend({}, CONFIG.boss);
     this.size = this.config.size;
     this.rotateSpeed = 0; // rad/ms
     // baseSpeed is init speed of boss

@@ -15,7 +15,7 @@
    * */
   function Warrior(assets, world, revolutionInit, revolutionSpeed) {
     _super.call(this, assets, world);
-    this.config = Object.assign({}, CONFIG.warrior, {
+    this.config = Util.extend({}, CONFIG.warrior, {
       revolutionInit: revolutionInit,
       revolutionSpeed: revolutionSpeed
     });

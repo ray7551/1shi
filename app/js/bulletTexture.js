@@ -1,13 +1,13 @@
 (function (global, CONFIG) {
   'use strict';
-  var config = Object.assign({}, CONFIG.bullet);
+  var config = Util.extend({}, CONFIG.bullet);
   var textureInstance = {
     warrior: null,  // bullet texture instance for warrior
     boss: null      // bullet texture instance for boss
   };
 
   var BulletTexture = function () {
-  }
+  };
 
   var generateTexture = function(ownerName) {
     ownerName = ownerName.toLowerCase();
@@ -26,7 +26,7 @@
 
     textureInstance[ownerName] = generateTexture(ownerName);
     return textureInstance[ownerName];
-  }
+  };
 
   global.BulletTexture = BulletTexture;
 })(window, CONFIG);

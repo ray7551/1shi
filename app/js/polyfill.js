@@ -137,3 +137,34 @@ Util.sign = function (x) {
   }
   return x >= 0 ? 1 : -1;
 };
+
+/**
+ * deep assign
+ * var p = {a: 1, b:{c: 3}};
+ * var c = Util.extend({}, p, {a: 2, b:{d: 4}});
+ * c should be {a: 2, b:{c: 3, d: 4}};
+ */
+Util.extend = function(target /*[, ...sources]*/) {
+  'use strict';
+  if (target === undefined || target === null) {
+    throw new TypeError('Cannot convert undefined or null to object');
+  }
+
+  var output = Object(target);
+  for (var index = 1; index < arguments.length; index++) {
+    var source = arguments[index];
+    if (source !== undefined && source !== null) {
+      for (var nextKey in source) {
+        if (Object.prototype.hasOwnProperty.call(source, nextKey)) {
+          if(Object.prototype.toString.apply(source[nextKey]) === '[object Object]') {
+            output[nextKey] = output[nextKey] ? output[nextKey] : {};
+            output[nextKey] = Util.extend({}, output[nextKey], source[nextKey]);
+          } else {
+            output[nextKey] = source[nextKey];
+          }
+        }
+      }
+    }
+  }
+  return output;
+};

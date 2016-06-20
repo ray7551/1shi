@@ -1,6 +1,6 @@
 (function (global, PIXI, $, CONFIG) {
   'use strict';
-  var config = Object.assign({}, CONFIG.world);
+  var config = Util.extend({}, CONFIG.world);
   var $canvas;
   var t = 0;
 

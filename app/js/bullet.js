@@ -13,7 +13,7 @@
   var Bullet = function (world, owner, option) {
     var bulletTexture = BulletTexture.getTexture(owner.constructor.name);
     _super.call(this, bulletTexture, world);
-    this.config = Object.assign({}, CONFIG.bullet, option);
+    this.config = Util.extend({}, CONFIG.bullet, option);
     this.owner = owner;
 
     this.size = this.config.size;
